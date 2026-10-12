@@ -1,0 +1,731 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gummeez SMP Store</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pixelify+Sans:wght@400;600;700&family=Figtree:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --night: #1B1236;
+    --panel: #261A47;
+    --panel-2: #33255C;
+    --line: #4A3A7A;
+    --text: #F3EEFF;
+    --muted: #A99BC9;
+    --pink: #FF6FD8;
+    --cyan: #38E8FF;
+    --gold: #FFD84D;
+    --chat-bg: rgba(0, 0, 0, 0.55);
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html { scroll-behavior: smooth; }
+  body {
+    margin: 0;
+    background: var(--night);
+    color: var(--text);
+    font: 400 16px/1.55 "Figtree", system-ui, sans-serif;
+    background-image:
+      radial-gradient(1200px 500px at 85% -10%, rgba(56, 232, 255, 0.10), transparent 60%),
+      radial-gradient(900px 500px at -10% 10%, rgba(255, 111, 216, 0.12), transparent 60%);
+    min-height: 100vh;
+  }
+  a { color: inherit; }
+  button { font: inherit; cursor: pointer; }
+  :focus-visible { outline: 3px solid var(--cyan); outline-offset: 3px; border-radius: 6px; }
+
+  .wrap { max-width: 1120px; margin: 0 auto; padding: 0 20px; }
+
+  /* ---------- header ---------- */
+  header {
+    position: sticky; top: 0; z-index: 20;
+    background: rgba(27, 18, 54, 0.88);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid var(--line);
+  }
+  .bar { display: flex; align-items: center; gap: 16px; height: 68px; }
+  .logo {
+    font: 700 26px/1 "Pixelify Sans", sans-serif;
+    background: linear-gradient(90deg, var(--pink), var(--cyan));
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+    text-decoration: none; letter-spacing: 0.5px;
+  }
+  .logo small { font-size: 15px; -webkit-text-fill-color: var(--muted); color: var(--muted); margin-left: 6px; }
+  nav { display: flex; gap: 4px; margin-left: 12px; }
+  nav a {
+    text-decoration: none; color: var(--muted); padding: 8px 12px; border-radius: 8px; font-weight: 500;
+  }
+  nav a:hover { color: var(--text); background: var(--panel); }
+  .bar-right { margin-left: auto; display: flex; gap: 10px; align-items: center; }
+  .ip {
+    display: flex; align-items: center; gap: 8px;
+    background: var(--panel); border: 1px solid var(--line); color: var(--text);
+    padding: 8px 12px; border-radius: 10px; font: 600 15px "Pixelify Sans", sans-serif;
+  }
+  .ip:hover { border-color: var(--cyan); }
+  .cart-btn {
+    position: relative; background: var(--text); color: var(--night); border: 0;
+    padding: 9px 16px; border-radius: 10px; font-weight: 700;
+  }
+  .cart-count {
+    position: absolute; top: -7px; right: -7px; min-width: 22px; height: 22px; padding: 0 6px;
+    border-radius: 11px; background: var(--pink); color: #fff; font-size: 12px;
+    display: grid; place-items: center; font-weight: 700;
+  }
+
+  /* ---------- hero: the chat window is the star ---------- */
+  .hero { padding: 64px 0 40px; display: grid; grid-template-columns: 1fr 1.15fr; gap: 48px; align-items: center; }
+  .hero h1 {
+    font: 700 clamp(40px, 6vw, 68px)/1.02 "Pixelify Sans", sans-serif;
+    margin: 0 0 18px; letter-spacing: 0.5px;
+  }
+  .hero p { color: var(--muted); font-size: 18px; max-width: 30em; margin: 0 0 24px; }
+  .name-field { display: flex; flex-direction: column; gap: 6px; max-width: 340px; }
+  .name-field label { font-weight: 600; font-size: 14px; color: var(--muted); }
+  .name-field input {
+    background: var(--panel); border: 1px solid var(--line); color: var(--text);
+    padding: 12px 14px; border-radius: 10px; font: 600 18px "Pixelify Sans", sans-serif;
+  }
+  .name-field input:focus { border-color: var(--cyan); outline: none; }
+
+  .mc-screen {
+    border-radius: 18px; overflow: hidden; border: 1px solid var(--line);
+    background:
+      linear-gradient(180deg, rgba(27,18,54,0) 40%, rgba(27,18,54,0.6)),
+      repeating-linear-gradient(0deg, #3b6d2e 0 18px, #457a35 18px 36px);
+    aspect-ratio: 16 / 10; position: relative;
+    box-shadow: 0 30px 80px -30px rgba(255, 111, 216, 0.45);
+  }
+  .mc-screen::before {
+    content: ""; position: absolute; inset: 0;
+    background:
+      linear-gradient(180deg, #7ec8ff 0 46%, transparent 46%),
+      repeating-linear-gradient(90deg, rgba(0,0,0,.05) 0 36px, transparent 36px 72px);
+  }
+  .chat {
+    position: absolute; left: 14px; right: 30%; bottom: 14px;
+    display: flex; flex-direction: column; gap: 3px;
+    font: 400 17px/1.25 "Pixelify Sans", sans-serif;
+  }
+  .chat-line {
+    background: var(--chat-bg); padding: 3px 8px; color: #fff;
+    text-shadow: 2px 2px 0 rgba(0,0,0,.6);
+    width: fit-content; max-width: 100%;
+  }
+  .chat-line.you { animation: pop .35s ease-out; }
+  @keyframes pop { from { transform: translateY(6px); opacity: 0; } to { transform: none; opacity: 1; } }
+  .chat-input {
+    position: absolute; left: 0; right: 0; bottom: 0; height: 0;
+  }
+  .t { font-weight: 700; }
+  .sep { color: #8a8a8a; }
+
+  /* tag colors (match how they look in game) */
+  .tag-vip     { color: #FFAA00; }
+  .tag-legend  { background: linear-gradient(90deg, #FFD84D, #FF8A00); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .tag-god     { background: linear-gradient(90deg, #FF3B3B, #B30000); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .tag-dragon  { background: linear-gradient(90deg, #B36BFF, #5A00B3); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .tag-crystal { background: linear-gradient(90deg, #E07CFF, #38E8FF); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .tag-shark   { color: #55A6FF; }
+  .tag-toxic   { color: #7CFF3B; }
+  .tag-gummy   { background: linear-gradient(90deg, #FF6FD8, #38E8FF, #FFD84D); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .tag-legend, .tag-god, .tag-dragon, .tag-crystal, .tag-gummy, .name-rainbow { text-shadow: none; }
+  .name-gold   { color: #FFD84D; }
+  .name-aqua   { color: #55FFFF; }
+  .name-red    { color: #FF5555; }
+  .name-rainbow { background: linear-gradient(90deg, #ff5555, #ffaa00, #ffff55, #55ff55, #55ffff, #5555ff, #ff55ff); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+  /* ---------- sections ---------- */
+  section { padding: 44px 0; }
+  .section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+  h2 { font: 700 34px/1.1 "Pixelify Sans", sans-serif; margin: 0; }
+  .section-head p { margin: 0; color: var(--muted); max-width: 34em; }
+
+  .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  .item {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 14px;
+    padding: 16px; display: flex; flex-direction: column; gap: 12px; text-align: left; color: var(--text);
+  }
+  .item.selected { border-color: var(--cyan); box-shadow: inset 0 0 0 1px var(--cyan); }
+  .preview {
+    background: #000a; border-radius: 6px; padding: 8px 10px;
+    font: 400 16px/1.2 "Pixelify Sans", sans-serif; color: #fff; text-shadow: 2px 2px 0 rgba(0,0,0,.5);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .item h3 { margin: 0; font-size: 17px; }
+  .item .desc { margin: 0; color: var(--muted); font-size: 14px; flex: 1; }
+  .bonus { display: flex; flex-wrap: wrap; gap: 6px; }
+  .bonus span { font: 600 14px "Pixelify Sans", sans-serif; padding: 3px 8px; border-radius: 6px; background: var(--night); }
+  .coin { color: #55FF55; }
+  .shard { color: #E07CFF; }
+  .store-tag { color: var(--gold); font-weight: 700; }
+  .cart-bonus { display: block; font-size: 13px; color: var(--muted); }
+  .summary .you-get { font-size: 14px; color: #55FF55; gap: 16px; }
+  .summary .you-get span:last-child { text-align: right; }
+  .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .price { font: 700 20px "Pixelify Sans", sans-serif; }
+  .btns { display: flex; gap: 6px; }
+  .btn {
+    border: 1px solid var(--line); background: transparent; color: var(--text);
+    padding: 8px 12px; border-radius: 9px; font-weight: 600; font-size: 14px;
+  }
+  .btn:hover { border-color: var(--muted); }
+  .btn.add { background: var(--pink); border-color: var(--pink); color: #2a0b24; }
+  .btn.add:hover { filter: brightness(1.08); }
+
+  /* ranks: bigger, fewer */
+  .ranks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .rank {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 22px;
+    display: flex; flex-direction: column; gap: 14px;
+  }
+  .rank.featured { background: linear-gradient(160deg, #3a2470, #261A47 60%); border-color: var(--pink); }
+  .rank h3 { margin: 0; font: 700 26px "Pixelify Sans", sans-serif; }
+  .rank ul { margin: 0; padding-left: 20px; color: var(--muted); }
+  .rank li { margin: 4px 0; }
+  .rank .row { margin-top: auto; }
+  .deal { background: var(--night); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: var(--muted); }
+  .deal .row { margin-top: 0; }
+  .deal s { color: #FF7A7A; white-space: nowrap; }
+  .deal-good { color: #55FF55; font-weight: 700; }
+  .save { font: 700 13px "Figtree", sans-serif; background: #55FF55; color: #0b2a0b; padding: 3px 7px; border-radius: 6px; vertical-align: middle; margin-left: 4px; }
+
+  .rules {
+    border: 1px dashed var(--line); border-radius: 14px; padding: 18px 20px; color: var(--muted);
+    display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; align-items: start;
+  }
+  .rules strong { color: var(--text); }
+
+  footer { border-top: 1px solid var(--line); margin-top: 30px; padding: 26px 0 40px; color: var(--muted); font-size: 14px; }
+  footer .row { flex-wrap: wrap; }
+
+  /* ---------- cart drawer ---------- */
+  .scrim { position: fixed; inset: 0; background: rgba(10, 5, 25, 0.6); opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 40; }
+  .drawer {
+    position: fixed; top: 0; right: 0; height: 100%; width: min(400px, 100%);
+    background: var(--panel); border-left: 1px solid var(--line); z-index: 50;
+    transform: translateX(100%); transition: transform .25s ease; display: flex; flex-direction: column;
+  }
+  .open .scrim { opacity: 1; pointer-events: auto; }
+  .open .drawer { transform: none; }
+  .drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid var(--line); }
+  .drawer-head h2 { font-size: 26px; }
+  .drawer-body { padding: 16px 20px; overflow: auto; flex: 1; display: flex; flex-direction: column; gap: 10px; }
+  .cart-row { display: flex; align-items: center; gap: 10px; background: var(--panel-2); border-radius: 10px; padding: 10px 12px; }
+  .cart-row span { flex: 1; }
+  .x { background: none; border: 0; color: var(--muted); font-size: 20px; line-height: 1; padding: 4px 6px; }
+  .x:hover { color: var(--text); }
+  .empty { color: var(--muted); text-align: center; padding: 30px 10px; }
+  .drawer-foot { padding: 18px 20px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
+  .checkout { background: var(--pink); color: #2a0b24; border: 0; padding: 14px; border-radius: 12px; font-weight: 700; }
+  .checkout:disabled { background: var(--line); color: var(--muted); cursor: not-allowed; }
+  .soon { color: var(--gold); font-size: 14px; text-align: center; margin: 0; }
+
+  /* ---------- demo checkout ---------- */
+  .modal-layer {
+    position: fixed; inset: 0; z-index: 70; background: rgba(10, 5, 25, 0.75);
+    display: grid; place-items: center; padding: 16px;
+  }
+  .modal {
+    width: min(520px, 100%); max-height: calc(100vh - 32px); overflow: auto;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 18px;
+    animation: pop .25s ease-out;
+  }
+  .demo-banner {
+    background: var(--gold); color: #2b2100; font-weight: 700; font-size: 14px;
+    padding: 8px 16px; text-align: center; border-radius: 17px 17px 0 0;
+  }
+  .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 4px; }
+  .modal-head h2 { font-size: 28px; }
+  .steps { display: flex; gap: 6px; padding: 8px 20px 0; list-style: none; margin: 0; }
+  .steps li {
+    flex: 1; font-size: 13px; color: var(--muted); padding-top: 8px;
+    border-top: 3px solid var(--line);
+  }
+  .steps li.on { color: var(--text); border-top-color: var(--cyan); }
+  .modal-body { padding: 18px 20px 22px; display: flex; flex-direction: column; gap: 14px; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-weight: 600; font-size: 14px; color: var(--muted); }
+  .field input {
+    background: var(--night); border: 1px solid var(--line); color: var(--text);
+    padding: 11px 13px; border-radius: 10px; font: 500 16px "Figtree", sans-serif;
+  }
+  .field input:focus { border-color: var(--cyan); outline: none; }
+  .field .hint { font-size: 13px; color: var(--muted); }
+  .check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; color: var(--muted); }
+  .check input { margin-top: 3px; accent-color: var(--pink); width: 16px; height: 16px; }
+  .summary { background: var(--night); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+  .summary .row { font-size: 15px; }
+  .summary .total { border-top: 1px solid var(--line); padding-top: 8px; margin-top: 4px; font-weight: 700; }
+  .big-btn {
+    background: var(--pink); color: #2a0b24; border: 0; padding: 14px; border-radius: 12px; font-weight: 700; font-size: 16px;
+  }
+  .big-btn:disabled { background: var(--line); color: var(--muted); cursor: not-allowed; }
+  .link-btn { background: none; border: 0; color: var(--muted); text-decoration: underline; padding: 4px; }
+  .pay-options { display: grid; gap: 8px; }
+  .pay-opt {
+    display: flex; align-items: center; gap: 12px; text-align: left;
+    background: var(--night); border: 1px solid var(--line); color: var(--text);
+    padding: 14px; border-radius: 12px; font-weight: 600;
+  }
+  .pay-opt .dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--muted); flex: none; }
+  .pay-opt[aria-pressed="true"] { border-color: var(--cyan); }
+  .pay-opt[aria-pressed="true"] .dot { border-color: var(--cyan); background: radial-gradient(var(--cyan) 45%, transparent 50%); }
+  .pay-opt small { display: block; color: var(--muted); font-weight: 400; }
+  .note { font-size: 14px; color: var(--muted); background: var(--panel-2); border-radius: 10px; padding: 10px 12px; margin: 0; }
+  .processing { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 30px 0; color: var(--muted); }
+  .spinner {
+    width: 44px; height: 44px; border-radius: 50%;
+    border: 4px solid var(--line); border-top-color: var(--pink); animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .done-title { font: 700 30px/1.1 "Pixelify Sans", sans-serif; margin: 0; }
+  .order-id { font: 600 15px "Pixelify Sans", sans-serif; color: var(--cyan); }
+
+  .toast {
+    position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); opacity: 0;
+    background: var(--text); color: var(--night); padding: 10px 16px; border-radius: 10px; font-weight: 600;
+    transition: all .2s; z-index: 60; pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  @media (max-width: 960px) {
+    .grid { grid-template-columns: repeat(2, 1fr); }
+    .ranks { grid-template-columns: 1fr; }
+    .hero { grid-template-columns: 1fr; padding-top: 36px; }
+  }
+  @media (max-width: 640px) {
+    nav { display: none; }
+    .ip { display: none; }
+    .grid { grid-template-columns: 1fr; }
+    .chat { right: 14px; font-size: 15px; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap bar">
+    <a class="logo" href="#top">GUMMEEZ<small>store</small></a>
+    <nav aria-label="Store sections">
+      <a href="#tags">Chat tags</a>
+      <a href="#colors">Name colors</a>
+      <a href="#ranks">Ranks</a>
+    </nav>
+    <div class="bar-right">
+      <button class="ip" id="copyIp" title="Copy server address"><span class="label">Play:</span> gummeez.minecraft.how</button>
+      <button class="cart-btn" id="openCart">Cart<span class="cart-count" id="cartCount" hidden>0</span></button>
+    </div>
+  </div>
+</header>
+
+<main id="top" class="wrap">
+
+  <div class="hero">
+    <div>
+      <h1>Stand out in chat.</h1>
+      <p>Tags, name colors and ranks for the Gummeez SMP. Everything comes with in-game money and shards to spend on the server.</p>
+      <div class="name-field">
+        <label for="mcName">Your Minecraft name</label>
+        <input id="mcName" value="Steve" maxlength="16" autocomplete="off" spellcheck="false">
+      </div>
+    </div>
+
+    <div class="mc-screen" aria-label="Preview of how your tag looks in game chat">
+      <div class="chat" id="chat">
+        <div class="chat-line"><span class="t tag-god">OWNER</span> gummeez<span class="sep">:</span> drop party at spawn in 1 min</div>
+        <div class="chat-line">Bob<span class="sep">:</span> omw</div>
+        <div class="chat-line"><span class="t" style="color:#55FFFF">MOD</span> Kai<span class="sep">:</span> no spamming pls</div>
+        <div class="chat-line you" id="youLine"><span class="t tag-legend" id="youTag">LEGEND</span> <span id="youName">Steve</span><span class="sep">:</span> gg</div>
+      </div>
+    </div>
+  </div>
+
+  <section id="tags">
+    <div class="section-head">
+      <h2>Chat tags</h2>
+      <p>Shows before your name in chat, in the tab list and above your head. Click Preview to see it up top.</p>
+    </div>
+    <div class="grid" id="tagGrid"></div>
+  </section>
+
+  <section id="colors">
+    <div class="section-head">
+      <h2>Name colors</h2>
+      <p>Changes the color of your name everywhere it shows up. Works with any tag.</p>
+    </div>
+    <div class="grid" id="colorGrid"></div>
+  </section>
+
+  <section id="ranks">
+    <div class="section-head">
+      <h2>Ranks</h2>
+      <p>A tag and a name color together for less than buying them on their own, with way more money and shards.</p>
+    </div>
+    <div class="ranks" id="rankGrid"></div>
+  </section>
+
+  <section>
+    <div class="rules">
+      <strong>Bonus</strong><span>Every item comes with in-game money and shards. They're added to your balance when you join.</span>
+      <strong>Delivery</strong><span>Your item shows up in game the next time you join. Make sure you type your Minecraft name exactly.</span>
+      <strong>Help</strong><span>Ask a mod in game or in the stream chat.</span>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap row">
+    <span>© Gummeez SMP. Not an official Minecraft product. Not approved by or associated with Mojang or Microsoft.</span>
+    <span>Server: gummeez.minecraft.how</span>
+  </div>
+</footer>
+
+<div id="cartLayer">
+  <div class="scrim" id="scrim"></div>
+  <aside class="drawer" aria-label="Cart">
+    <div class="drawer-head">
+      <h2>Your cart</h2>
+      <button class="x" id="closeCart" aria-label="Close cart">×</button>
+    </div>
+    <div class="drawer-body" id="cartBody"></div>
+    <div class="drawer-foot">
+      <div class="row"><span>Total</span><span class="price" id="cartTotal">$0.00</span></div>
+      <button class="checkout" id="checkoutBtn" disabled>Checkout</button>
+      <p class="soon">Demo mode: checking out won't charge anything.</p>
+    </div>
+  </aside>
+</div>
+
+<div class="modal-layer" id="checkoutLayer" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="coTitle">
+    <div class="demo-banner">Demo checkout. No real money is charged.</div>
+    <div class="modal-head">
+      <h2 id="coTitle">Checkout</h2>
+      <button class="x" id="closeCheckout" aria-label="Close checkout">×</button>
+    </div>
+    <ol class="steps" id="steps">
+      <li data-step="1">1. Your details</li>
+      <li data-step="2">2. Payment</li>
+      <li data-step="3">3. Done</li>
+    </ol>
+
+    <!-- step 1 -->
+    <div class="modal-body" id="step1">
+      <div class="field">
+        <label for="coName">Minecraft name</label>
+        <input id="coName" maxlength="16" autocomplete="off" spellcheck="false">
+        <span class="hint">Your items go to this player. Check the spelling.</span>
+      </div>
+      <div class="field">
+        <label for="coEmail">Email for your receipt</label>
+        <input id="coEmail" type="email" placeholder="you@example.com" autocomplete="off">
+        <span class="hint">In this demo nothing gets sent.</span>
+      </div>
+      <div class="summary" id="coSummary"></div>
+      <label class="check"><input type="checkbox" id="coAge"> I'm 18 or older, or a parent or guardian said I can buy this.</label>
+      <label class="check"><input type="checkbox" id="coTerms"> I understand these are in-game items with no real-world value and purchases are final.</label>
+      <button class="big-btn" id="toPay" disabled>Continue to payment</button>
+    </div>
+
+    <!-- step 2 -->
+    <div class="modal-body" id="step2" hidden>
+      <div class="pay-options" id="payOptions">
+        <button class="pay-opt" data-method="Card" aria-pressed="true"><span class="dot"></span><span>Credit or debit card<small>Visa, Mastercard and others</small></span></button>
+        <button class="pay-opt" data-method="PayPal" aria-pressed="false"><span class="dot"></span><span>PayPal<small>Pay with your PayPal account</small></span></button>
+        <button class="pay-opt" data-method="Phone wallet" aria-pressed="false"><span class="dot"></span><span>Apple Pay or Google Pay<small>Pay with your phone</small></span></button>
+      </div>
+      <p class="note">On the real store, this button opens the payment company's secure page where you'd type card details. The demo skips that, so you don't need a card.</p>
+      <div class="summary" id="coSummary2"></div>
+      <button class="big-btn" id="payBtn">Pay</button>
+      <button class="link-btn" id="backTo1">Back to your details</button>
+    </div>
+
+    <!-- processing -->
+    <div class="modal-body" id="stepWait" hidden>
+      <div class="processing"><div class="spinner"></div><span>Processing your payment…</span></div>
+    </div>
+
+    <!-- step 3 -->
+    <div class="modal-body" id="step3" hidden>
+      <p class="done-title" id="doneTitle">You're all set!</p>
+      <span class="order-id" id="orderId"></span>
+      <p style="margin:0;color:var(--muted)">Join <strong style="color:var(--text)">gummeez.minecraft.how</strong> and your stuff will be waiting. Here's how you'll look in chat:</p>
+      <div class="preview" id="donePreview"></div>
+      <div id="doneLoot" style="display:flex;flex-direction:column;gap:6px"></div>
+      <div class="summary" id="coSummary3"></div>
+      <p class="note">A receipt would be emailed to you here. This was a demo, so nothing was charged or sent.</p>
+      <button class="big-btn" id="doneBtn">Back to the store</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+  // ---- what's for sale (placeholder prices) ----
+  const TAGS = [
+    { id: "vip",     name: "VIP",     cls: "tag-vip",     price: 0.99, cash: 1000000, shards: 5000,  desc: "Classic gold tag." },
+    { id: "shark",   name: "SHARK",   cls: "tag-shark",   price: 1.49, cash: 1500000, shards: 7500,  desc: "For the PvP sweats." },
+    { id: "toxic",   name: "TOXIC",   cls: "tag-toxic",   price: 1.49, cash: 1500000, shards: 7500,  desc: "Bright green, hard to miss." },
+    { id: "legend",  name: "LEGEND",  cls: "tag-legend",  price: 1.99, cash: 2000000, shards: 10000, desc: "Gold to orange fade." },
+    { id: "crystal", name: "CRYSTAL", cls: "tag-crystal", price: 1.99, cash: 2000000, shards: 10000, desc: "For crystal PvP mains." },
+    { id: "dragon",  name: "DRAGON",  cls: "tag-dragon",  price: 2.49, cash: 2500000, shards: 12500, desc: "Deep purple fade." },
+    { id: "god",     name: "GOD",     cls: "tag-god",     price: 2.99, cash: 3000000, shards: 15000, desc: "Red fade. Big energy." },
+    { id: "gummy",   name: "GUMMY",   cls: "tag-gummy",   price: 3.99, cash: 4000000, shards: 20000, desc: "The server's own colors." },
+  ];
+  const COLORS = [
+    { id: "c-gold",    name: "Gold name",    cls: "name-gold",    price: 0.99, cash: 1000000, shards: 5000,  desc: "Your name in gold." },
+    { id: "c-aqua",    name: "Aqua name",    cls: "name-aqua",    price: 0.99, cash: 1000000, shards: 5000,  desc: "Your name in aqua." },
+    { id: "c-red",     name: "Red name",     cls: "name-red",     price: 0.99, cash: 1000000, shards: 5000,  desc: "Your name in red." },
+    { id: "c-rainbow", name: "Rainbow name", cls: "name-rainbow", price: 1.99, cash: 2000000, shards: 10000, desc: "Every color at once." },
+  ];
+  const RANKS = [
+    { id: "r-supporter", name: "Supporter", tag: "VIP", tagCls: "tag-vip", nameCls: "name-gold", price: 1.49, cash: 3000000, shards: 15000, parts: ["vip", "c-gold"],
+      perks: ["VIP tag", "Gold name", "$3M money", "15K shards", "Supporter join message"] },
+    { id: "r-legend", name: "Legend", tag: "LEGEND", tagCls: "tag-legend", nameCls: "name-aqua", price: 1.99, cash: 7500000, shards: 35000, parts: ["legend", "c-aqua"], featured: true,
+      perks: ["LEGEND tag", "Pick any name color", "$7.5M money", "35K shards", "Firework join effect"] },
+    { id: "r-mythic", name: "Mythic", tag: "GUMMY", tagCls: "tag-gummy", nameCls: "name-rainbow", price: 3.49, cash: 15000000, shards: 75000, parts: ["gummy", "c-rainbow"],
+      perks: ["GUMMY tag", "Rainbow name", "$15M money", "75K shards", "Particle trail", "Lightning kill effect"] },
+  ];
+
+  const $ = (s) => document.querySelector(s);
+  const money = (v) => "$" + v.toFixed(2);
+  // 1500000 -> "1.5M", 7500 -> "7.5K"
+  const short = (n) => n >= 1e6 ? +(n / 1e6).toFixed(1) + "M" : n >= 1e3 ? +(n / 1e3).toFixed(1) + "K" : String(n);
+  const bonusHtml = (i) => `<div class="bonus"><span class="coin">+$${short(i.cash)} money</span><span class="shard">+${short(i.shards)} shards</span></div>`;
+  // what a bundle's items would cost bought one by one
+  function separately(r) {
+    const items = r.parts.map(id => [...TAGS, ...COLORS].find(x => x.id === id));
+    return {
+      price: items.reduce((s, x) => s + x.price, 0),
+      cash: items.reduce((s, x) => s + x.cash, 0),
+      shards: items.reduce((s, x) => s + x.shards, 0),
+    };
+  }
+  let cart = [];
+  let currentTag = { name: "LEGEND", cls: "tag-legend" };
+  let currentName = "";
+
+  function playerName() { return ($("#mcName").value.trim() || "Steve").slice(0, 16); }
+
+  function updateChat() {
+    const tag = $("#youTag"), nm = $("#youName"), line = $("#youLine");
+    tag.textContent = currentTag.name;
+    tag.className = "t " + currentTag.cls;
+    nm.textContent = playerName();
+    nm.className = currentName;
+    line.classList.remove("you"); void line.offsetWidth; line.classList.add("you");
+  }
+
+  function card(item, preview, onPreview) {
+    const el = document.createElement("div");
+    el.className = "item";
+    el.innerHTML = `
+      <div class="preview">${preview}</div>
+      <h3>${item.name}</h3>
+      <p class="desc">${item.desc}</p>
+      ${bonusHtml(item)}
+      <div class="row">
+        <span class="price">${money(item.price)}</span>
+        <div class="btns">
+          <button class="btn" data-act="preview">Preview</button>
+          <button class="btn add" data-act="add">Add</button>
+        </div>
+      </div>`;
+    el.querySelector('[data-act="preview"]').onclick = () => {
+      document.querySelectorAll(".item.selected").forEach(x => x.classList.remove("selected"));
+      el.classList.add("selected");
+      onPreview();
+      updateChat();
+      document.querySelector(".mc-screen").scrollIntoView({ behavior: "smooth", block: "center" });
+    };
+    el.querySelector('[data-act="add"]').onclick = () => addToCart(item);
+    return el;
+  }
+
+  function render() {
+    const n = playerName();
+    const tg = $("#tagGrid"); tg.innerHTML = "";
+    TAGS.forEach(t => tg.appendChild(card(t,
+      `<span class="t ${t.cls}">${t.name}</span> ${n}<span class="sep">:</span> hi`,
+      () => { currentTag = { name: t.name, cls: t.cls }; })));
+    const cg = $("#colorGrid"); cg.innerHTML = "";
+    COLORS.forEach(c => cg.appendChild(card(c,
+      `<span class="${c.cls}">${n}</span><span class="sep">:</span> hi`,
+      () => { currentName = c.cls; })));
+    const rg = $("#rankGrid"); rg.innerHTML = "";
+    RANKS.forEach(r => {
+      const el = document.createElement("div");
+      el.className = "rank" + (r.featured ? " featured" : "");
+      const sep = separately(r);
+      el.innerHTML = `
+        <h3>${r.name}</h3>
+        <div class="preview"><span class="t ${r.tagCls}">${r.tag}</span> <span class="${r.nameCls}">${n}</span><span class="sep">:</span> hi</div>
+        <ul>${r.perks.map(p => `<li>${p}</li>`).join("")}</ul>
+        <div class="deal">
+          <div class="row"><span>Bought separately</span><s>${money(sep.price)}</s></div>
+          <div class="row"><span>Bonus separately</span><s>$${short(sep.cash)} and ${short(sep.shards)}</s></div>
+          <div class="row deal-good"><span>In this bundle</span><span>$${short(r.cash)} and ${short(r.shards)}</span></div>
+        </div>
+        <div class="row">
+          <span class="price">${money(r.price)} <span class="save">Save ${Math.round((1 - r.price / sep.price) * 100)}%</span></span>
+          <div class="btns">
+            <button class="btn" data-act="preview">Preview</button>
+            <button class="btn add" data-act="add">Add</button>
+          </div>
+        </div>`;
+      el.querySelector('[data-act="preview"]').onclick = () => {
+        currentTag = { name: r.tag, cls: r.tagCls }; currentName = r.nameCls; updateChat();
+        document.querySelector(".mc-screen").scrollIntoView({ behavior: "smooth", block: "center" });
+      };
+      el.querySelector('[data-act="add"]').onclick = () => addToCart({ id: r.id, name: r.name + " rank", price: r.price, cash: r.cash, shards: r.shards, tag: r.tag, tagCls: r.tagCls, nameCls: r.nameCls });
+      rg.appendChild(el);
+    });
+  }
+
+  function toast(msg) {
+    const t = $("#toast"); t.textContent = msg; t.classList.add("show");
+    clearTimeout(toast.timer); toast.timer = setTimeout(() => t.classList.remove("show"), 1800);
+  }
+
+  function addToCart(item) {
+    if (cart.find(c => c.id === item.id)) { toast(item.name + " is already in your cart"); return; }
+    cart.push({ ...item });
+    renderCart(); toast("Added " + item.name);
+  }
+
+  function renderCart() {
+    const body = $("#cartBody"); body.innerHTML = "";
+    if (!cart.length) body.innerHTML = '<div class="empty">Your cart is empty. Add a tag or name color to see it here.</div>';
+    cart.forEach((c, i) => {
+      const row = document.createElement("div");
+      row.className = "cart-row";
+      row.innerHTML = `<span>${c.name}<small class="cart-bonus">+$${short(c.cash)} and ${short(c.shards)} shards</small></span><strong>${money(c.price)}</strong><button class="x" aria-label="Remove ${c.name}">×</button>`;
+      row.querySelector("button").onclick = () => { cart.splice(i, 1); renderCart(); };
+      body.appendChild(row);
+    });
+    const count = $("#cartCount");
+    count.hidden = cart.length === 0; count.textContent = cart.length;
+    $("#cartTotal").textContent = money(cartTotal());
+    $("#checkoutBtn").disabled = cart.length === 0;
+  }
+
+  function cartTotal() { return cart.reduce((s, c) => s + c.price, 0); }
+
+  // ---- demo checkout (nothing is charged, nothing is sent) ----
+  let payMethod = "Card";
+
+  function summaryHtml() {
+    return cart.map(c => `<div class="row"><span>${c.name}</span><span>${money(c.price)}</span></div>`).join("")
+      + `<div class="row total"><span>Total</span><span>${money(cartTotal())}</span></div>`
+      + `<div class="row you-get"><span>You also get</span><span>$${short(cartCash())} money and ${short(cartShards())} shards</span></div>`;
+  }
+  function cartCash() { return cart.reduce((s, c) => s + (c.cash || 0), 0); }
+  function cartShards() { return cart.reduce((s, c) => s + (c.shards || 0), 0); }
+
+  function showStep(id) {
+    ["step1", "step2", "stepWait", "step3"].forEach(s => $("#" + s).hidden = s !== id);
+    const n = id === "step1" ? 1 : id === "step3" ? 3 : 2;
+    document.querySelectorAll("#steps li").forEach(li => li.classList.toggle("on", Number(li.dataset.step) <= n));
+    $("#closeCheckout").hidden = id === "stepWait";
+  }
+
+  function validStep1() {
+    const name = $("#coName").value.trim();
+    const email = $("#coEmail").value.trim();
+    const nameOk = /^[A-Za-z0-9_.]{3,16}$/.test(name);
+    const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+    $("#toPay").disabled = !(nameOk && emailOk && $("#coAge").checked && $("#coTerms").checked);
+  }
+
+  function openCheckout() {
+    if (!cart.length) return;
+    setCart(false);
+    $("#coName").value = playerName();
+    $("#coSummary").innerHTML = summaryHtml();
+    validStep1();
+    showStep("step1");
+    $("#checkoutLayer").hidden = false;
+    $("#coName").focus();
+  }
+
+  function closeCheckout() {
+    if (!$("#stepWait").hidden) return; // can't close while "paying"
+    $("#checkoutLayer").hidden = true;
+  }
+
+  $("#checkoutBtn").onclick = openCheckout;
+  $("#closeCheckout").onclick = closeCheckout;
+  ["coName", "coEmail"].forEach(id => $("#" + id).addEventListener("input", validStep1));
+  ["coAge", "coTerms"].forEach(id => $("#" + id).addEventListener("change", validStep1));
+
+  $("#toPay").onclick = () => {
+    $("#coSummary2").innerHTML = summaryHtml();
+    $("#payBtn").textContent = "Pay " + money(cartTotal()) + " (demo)";
+    showStep("step2");
+  };
+  $("#backTo1").onclick = () => showStep("step1");
+
+  document.querySelectorAll(".pay-opt").forEach(b => b.onclick = () => {
+    document.querySelectorAll(".pay-opt").forEach(x => x.setAttribute("aria-pressed", "false"));
+    b.setAttribute("aria-pressed", "true");
+    payMethod = b.dataset.method;
+  });
+
+  $("#payBtn").onclick = () => {
+    showStep("stepWait");
+    setTimeout(finishOrder, 2000);
+  };
+
+  function finishOrder() {
+    const name = $("#coName").value.trim();
+    // what they'll look like: last tag/rank bought, last name color bought
+    let tag = null, tagCls = "", nameCls = "";
+    cart.forEach(c => {
+      if (c.tag) { tag = c.tag; tagCls = c.tagCls; nameCls = c.nameCls; }
+      else if (c.id.startsWith("c-")) nameCls = c.cls;
+      else if (c.cls) { tag = c.name; tagCls = c.cls; }
+    });
+    $("#doneTitle").textContent = "You're all set, " + name + "!";
+    $("#orderId").textContent = "Order DEMO-" + Math.random().toString(36).slice(2, 8).toUpperCase() + " · paid with " + payMethod + " (demo)";
+    $("#donePreview").innerHTML = (tag ? `<span class="t ${tagCls}">${tag}</span> ` : "")
+      + `<span class="${nameCls}">${name}</span><span class="sep">:</span> thanks for the stuff!`;
+    $("#doneLoot").innerHTML =
+      `<div class="preview"><span class="store-tag">[Store]</span> ${name}, you got <span class="coin">$${cartCash().toLocaleString()}</span></div>`
+      + `<div class="preview"><span class="store-tag">[Store]</span> ${name}, you got <span class="shard">${cartShards().toLocaleString()} shards</span></div>`;
+    $("#coSummary3").innerHTML = summaryHtml();
+    showStep("step3");
+  }
+
+  $("#doneBtn").onclick = () => {
+    cart = []; renderCart();
+    $("#checkoutLayer").hidden = true;
+    toast("Demo order finished. Nothing was charged.");
+  };
+
+  function setCart(open) { document.getElementById("cartLayer").classList.toggle("open", open); }
+  $("#openCart").onclick = () => setCart(true);
+  $("#closeCart").onclick = () => setCart(false);
+  $("#scrim").onclick = () => setCart(false);
+  document.addEventListener("keydown", e => {
+    if (e.key !== "Escape") return;
+    if (!$("#checkoutLayer").hidden) closeCheckout(); else setCart(false);
+  });
+
+  $("#copyIp").onclick = async () => {
+    try { await navigator.clipboard.writeText("gummeez.minecraft.how"); toast("Server address copied"); }
+    catch { toast("gummeez.minecraft.how"); }
+  };
+  $("#mcName").addEventListener("input", () => { render(); updateChat(); });
+
+  render(); renderCart(); updateChat();
+</script>
+</body>
+</html>
