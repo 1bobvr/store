@@ -69,11 +69,15 @@
     padding: 8px 12px; border-radius: 10px; font: 600 15px "Pixelify Sans", sans-serif;
   }
   .ip:hover { border-color: var(--cyan); }
-  .store-btn {
-    background: var(--text); color: var(--night); text-decoration: none;
+  .cart-btn {
+    position: relative; background: var(--text); color: var(--night); border: 0;
     padding: 9px 16px; border-radius: 10px; font-weight: 700;
   }
-  .store-btn:hover { filter: brightness(0.92); }
+  .cart-count {
+    position: absolute; top: -7px; right: -7px; min-width: 22px; height: 22px; padding: 0 6px;
+    border-radius: 11px; background: var(--pink); color: #fff; font-size: 12px;
+    display: grid; place-items: center; font-weight: 700;
+  }
 
   /* ---------- hero: the chat window is the star ---------- */
   .hero { padding: 64px 0 40px; display: grid; grid-template-columns: 1fr 1.15fr; gap: 48px; align-items: center; }
@@ -157,12 +161,15 @@
   .item h3 { margin: 0; font-size: 17px; }
   .item .desc { margin: 0; color: var(--muted); font-size: 14px; flex: 1; }
   .bonus { display: flex; flex-wrap: wrap; gap: 6px; }
-  .bonus span { padding: 3px 8px; border-radius: 6px; background: var(--night); font-size: 14px; }
-  /* numbers use the regular font so they are easy to read */
-  .coin, .shard { font-family: "Figtree", sans-serif; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .bonus span { font: 700 14px "Figtree", sans-serif; padding: 3px 8px; border-radius: 6px; background: var(--night); }
   .coin { color: #55FF55; }
   .shard { color: #E07CFF; }
-  .deal-good { color: #55FF55; font-weight: 700; }
+  /* numbers use the regular font so they are easy to read */
+  .coin, .shard { font-family: "Figtree", sans-serif; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .store-tag { color: var(--gold); font-weight: 700; }
+  .cart-bonus { display: block; font-size: 13px; color: var(--muted); }
+  .summary .you-get { font-size: 14px; color: #55FF55; gap: 16px; }
+  .summary .you-get span:last-child { text-align: right; }
   .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
   .price { font: 800 22px "Figtree", sans-serif; font-variant-numeric: tabular-nums; }
   .btns { display: flex; gap: 6px; }
@@ -171,9 +178,8 @@
     padding: 8px 12px; border-radius: 9px; font-weight: 600; font-size: 14px;
   }
   .btn:hover { border-color: var(--muted); }
-  a.btn { text-decoration: none; display: inline-block; }
-  .btn.buy { background: var(--pink); border-color: var(--pink); color: #2a0b24; }
-  .btn.buy:hover { filter: brightness(1.08); }
+  .btn.add { background: var(--pink); border-color: var(--pink); color: #2a0b24; }
+  .btn.add:hover { filter: brightness(1.08); }
 
   /* ranks: bigger, fewer */
   .ranks { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
@@ -189,6 +195,7 @@
   .deal { background: var(--night); border-radius: 10px; padding: 10px 12px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: var(--muted); }
   .deal .row { margin-top: 0; }
   .deal s { color: #FF7A7A; white-space: nowrap; }
+  .deal-good { color: #55FF55; font-weight: 700; }
   .save { font: 700 13px "Figtree", sans-serif; background: #55FF55; color: #0b2a0b; padding: 3px 7px; border-radius: 6px; vertical-align: middle; margin-left: 4px; }
 
   .rules {
@@ -199,6 +206,101 @@
 
   footer { border-top: 1px solid var(--line); margin-top: 30px; padding: 26px 0 40px; color: var(--muted); font-size: 14px; }
   footer .row { flex-wrap: wrap; }
+
+  /* ---------- cart drawer ---------- */
+  .scrim { position: fixed; inset: 0; background: rgba(10, 5, 25, 0.6); opacity: 0; pointer-events: none; transition: opacity .2s; z-index: 40; }
+  .drawer {
+    position: fixed; top: 0; right: 0; height: 100%; width: min(400px, 100%);
+    background: var(--panel); border-left: 1px solid var(--line); z-index: 50;
+    transform: translateX(100%); transition: transform .25s ease; display: flex; flex-direction: column;
+  }
+  .open .scrim { opacity: 1; pointer-events: auto; }
+  .open .drawer { transform: none; }
+  .drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid var(--line); }
+  .drawer-head h2 { font-size: 26px; }
+  .drawer-body { padding: 16px 20px; overflow: auto; flex: 1; display: flex; flex-direction: column; gap: 10px; }
+  .cart-row { display: flex; align-items: center; gap: 10px; background: var(--panel-2); border-radius: 10px; padding: 10px 12px; }
+  .cart-row span { flex: 1; }
+  .x { background: none; border: 0; color: var(--muted); font-size: 20px; line-height: 1; padding: 4px 6px; }
+  .x:hover { color: var(--text); }
+  .empty { color: var(--muted); text-align: center; padding: 30px 10px; }
+  .drawer-foot { padding: 18px 20px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; }
+  .checkout { background: var(--pink); color: #2a0b24; border: 0; padding: 14px; border-radius: 12px; font-weight: 700; }
+  .checkout:disabled { background: var(--line); color: var(--muted); cursor: not-allowed; }
+  .soon { color: var(--gold); font-size: 14px; text-align: center; margin: 0; }
+
+  /* ---------- checkout ---------- */
+  .modal-layer {
+    position: fixed; inset: 0; z-index: 70; background: rgba(10, 5, 25, 0.75);
+    display: grid; place-items: center; padding: 16px;
+  }
+  .modal {
+    width: min(520px, 100%); max-height: calc(100vh - 32px); overflow: auto;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 18px;
+    animation: pop .25s ease-out;
+  }
+  .demo-banner {
+    background: var(--gold); color: #2b2100; font-weight: 700; font-size: 14px;
+    padding: 8px 16px; text-align: center; border-radius: 17px 17px 0 0;
+  }
+  .modal-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px 4px; }
+  .modal-head h2 { font-size: 28px; }
+  .steps { display: flex; gap: 6px; padding: 8px 20px 0; list-style: none; margin: 0; }
+  .steps li {
+    flex: 1; font-size: 13px; color: var(--muted); padding-top: 8px;
+    border-top: 3px solid var(--line);
+  }
+  .steps li.on { color: var(--text); border-top-color: var(--cyan); }
+  .modal-body { padding: 18px 20px 22px; display: flex; flex-direction: column; gap: 14px; }
+  .field { display: flex; flex-direction: column; gap: 6px; }
+  .field label { font-weight: 600; font-size: 14px; color: var(--muted); }
+  .field input {
+    background: var(--night); border: 1px solid var(--line); color: var(--text);
+    padding: 11px 13px; border-radius: 10px; font: 500 16px "Figtree", sans-serif;
+  }
+  .field input:focus { border-color: var(--cyan); outline: none; }
+  .field .hint { font-size: 13px; color: var(--muted); }
+  .check { display: flex; gap: 10px; align-items: flex-start; font-size: 14px; color: var(--muted); }
+  .check input { margin-top: 3px; accent-color: var(--pink); width: 16px; height: 16px; }
+  .summary { background: var(--night); border-radius: 12px; padding: 12px 14px; display: flex; flex-direction: column; gap: 6px; }
+  .summary .row { font-size: 15px; }
+  .summary .total { border-top: 1px solid var(--line); padding-top: 8px; margin-top: 4px; font-weight: 700; }
+  .big-btn {
+    background: var(--pink); color: #2a0b24; border: 0; padding: 14px; border-radius: 12px; font-weight: 700; font-size: 16px;
+  }
+  .big-btn:disabled { background: var(--line); color: var(--muted); cursor: not-allowed; }
+  .link-btn { background: none; border: 0; color: var(--muted); text-decoration: underline; padding: 4px; }
+  .pay-options { display: grid; gap: 8px; }
+  .pay-opt {
+    display: flex; align-items: center; gap: 12px; text-align: left;
+    background: var(--night); border: 1px solid var(--line); color: var(--text);
+    padding: 14px; border-radius: 12px; font-weight: 600;
+  }
+  .pay-opt .dot { width: 18px; height: 18px; border-radius: 50%; border: 2px solid var(--muted); flex: none; }
+  .pay-opt[aria-pressed="true"] { border-color: var(--cyan); }
+  .pay-opt[aria-pressed="true"] .dot { border-color: var(--cyan); background: radial-gradient(var(--cyan) 45%, transparent 50%); }
+  .pay-opt small { display: block; color: var(--muted); font-weight: 400; }
+  .note { font-size: 14px; color: var(--muted); background: var(--panel-2); border-radius: 10px; padding: 10px 12px; margin: 0; }
+  .processing { display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 30px 0; color: var(--muted); }
+  .spinner {
+    width: 44px; height: 44px; border-radius: 50%;
+    border: 4px solid var(--line); border-top-color: var(--pink); animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .platform { display: flex; gap: 6px; }
+  .platform button {
+    flex: 1; background: var(--night); border: 1px solid var(--line); color: var(--muted);
+    padding: 10px; border-radius: 10px; font-weight: 700;
+  }
+  .platform button[aria-pressed="true"] { border-color: var(--cyan); color: var(--text); box-shadow: inset 0 0 0 1px var(--cyan); }
+  .error { color: #FF8A8A; font-size: 14px; margin: 0; }
+  .who { display: flex; align-items: center; gap: 14px; background: var(--night); border-radius: 12px; padding: 14px; }
+  .who img { width: 64px; height: 64px; border-radius: 8px; image-rendering: pixelated; background: var(--panel-2); flex: none; }
+  .who .who-name { font: 700 24px/1.1 "Pixelify Sans", sans-serif; color: var(--gold); word-break: break-all; }
+  .who small { display: block; color: var(--muted); font-size: 13px; margin-top: 4px; }
+  .warn { color: #FF8A8A; font-size: 14px; margin: 0; }
+  .done-title { font: 700 30px/1.1 "Pixelify Sans", sans-serif; margin: 0; }
+  .order-id { font: 700 15px "Figtree", sans-serif; color: var(--cyan); }
 
   .toast {
     position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, 20px); opacity: 0;
@@ -235,7 +337,7 @@
     </nav>
     <div class="bar-right">
       <button class="ip" id="copyIp" title="Copy server address"><span class="label">Play:</span> gummeez.minecraft.how</button>
-      <a class="store-btn" id="storeLink" href="https://gummeezsmp.tebex.store">Open store</a>
+      <button class="cart-btn" id="openCart">Cart<span class="cart-count" id="cartCount" hidden>0</span></button>
     </div>
   </div>
 </header>
@@ -289,8 +391,8 @@
   <section>
     <div class="rules">
       <strong>Bonus</strong><span>Every item comes with in-game money and shards. They're added to your balance as soon as you're online.</span>
-      <strong>Checkout</strong><span>Buy buttons take you to our store on Tebex, the payment company most Minecraft servers use. We never see your card details.</span>
-      <strong>Delivery</strong><span>Your item shows up in game within a few minutes, or the next time you join. Type your Minecraft name exactly. On Bedrock, put a dot in front, like .Steve</span>
+      <strong>Checkout</strong><span>You pay on Tebex's secure checkout page, the payment company most Minecraft servers use. We never see your card details.</span>
+      <strong>Delivery</strong><span>Your items show up in game within a few minutes, or the next time you join.</span>
       <strong>Help</strong><span>Ask a mod in game or in the stream chat.</span>
     </div>
   </section>
@@ -303,20 +405,103 @@
   </div>
 </footer>
 
+<div id="cartLayer">
+  <div class="scrim" id="scrim"></div>
+  <aside class="drawer" aria-label="Cart">
+    <div class="drawer-head">
+      <h2>Your cart</h2>
+      <button class="x" id="closeCart" aria-label="Close cart">×</button>
+    </div>
+    <div class="drawer-body" id="cartBody"></div>
+    <div class="drawer-foot">
+      <div class="row"><span>Total</span><span class="price" id="cartTotal">$0.00</span></div>
+      <button class="checkout" id="checkoutBtn" disabled>Checkout</button>
+      <p class="soon">You'll pay on Tebex's secure checkout page.</p>
+    </div>
+  </aside>
+</div>
+
+<div class="modal-layer" id="checkoutLayer" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="coTitle">
+    <div class="modal-head">
+      <h2 id="coTitle">Checkout</h2>
+      <button class="x" id="closeCheckout" aria-label="Close checkout">×</button>
+    </div>
+    <ol class="steps" id="steps">
+      <li data-step="1">1. Your name</li>
+      <li data-step="2">2. Check it</li>
+      <li data-step="3">3. Pay on Tebex</li>
+    </ol>
+
+    <!-- step 1: who gets the items -->
+    <div class="modal-body" id="step1">
+      <div class="field">
+        <label>What do you play on?</label>
+        <div class="platform" id="platform">
+          <button type="button" data-p="java" aria-pressed="true">Java (PC)</button>
+          <button type="button" data-p="bedrock" aria-pressed="false">Bedrock (phone, console)</button>
+        </div>
+      </div>
+      <div class="field">
+        <label for="coName" id="coNameLabel">Minecraft name</label>
+        <input id="coName" maxlength="20" autocomplete="off" spellcheck="false">
+        <span class="hint" id="coHint">Your exact Java username. Your items go to this player.</span>
+      </div>
+      <div class="summary" id="coSummary"></div>
+      <label class="check"><input type="checkbox" id="coAge"> I'm 18 or older, or a parent or guardian said I can buy this.</label>
+      <label class="check"><input type="checkbox" id="coTerms"> I understand these are in-game items with no real-world value and purchases are final.</label>
+      <p class="error" id="coError" hidden></p>
+      <button class="big-btn" id="toCheck" disabled>Continue</button>
+    </div>
+
+    <!-- working -->
+    <div class="modal-body" id="stepWait" hidden>
+      <div class="processing"><div class="spinner"></div><span id="waitText">Checking your name…</span></div>
+    </div>
+
+    <!-- step 2: is this you? -->
+    <div class="modal-body" id="step2" hidden>
+      <div class="who">
+        <img id="whoHead" alt="" width="64" height="64">
+        <div><div class="who-name" id="whoName"></div><small id="whoNote"></small></div>
+      </div>
+      <p class="warn">Is this you? Your items and bonus go to this exact player. If it's wrong, go back and fix it.</p>
+      <div class="summary" id="coSummary2"></div>
+      <p class="error" id="payError" hidden></p>
+      <button class="big-btn" id="payBtn">Yes, that's me. Go to payment</button>
+      <button class="link-btn" id="backTo1">No, change my name</button>
+    </div>
+
+    <!-- after paying -->
+    <div class="modal-body" id="step3" hidden>
+      <p class="done-title">Thanks for supporting the server!</p>
+      <p style="margin:0;color:var(--muted)">Your items and bonus money and shards show up in game within a few minutes. If you're offline, they'll be waiting the next time you join <strong style="color:var(--text)">gummeez.minecraft.how</strong>.</p>
+      <p class="note">Tebex emails your receipt. Use <strong>/tags</strong> in game to switch between what you own.</p>
+      <button class="big-btn" id="doneBtn">Back to the store</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script>
   // ---- your Tebex store ----
-  // To send a button straight to one package, give that item a link:
-  //   { id: "vip", ..., link: "https://gummeezsmp.tebex.store/package/1234567" }
-  // Items without a link open the store's home page.
-  const STORE = "https://gummeezsmp.tebex.store";
+  // Public token from creator.tebex.io/developers/api-keys (safe to be public; never put the private key here).
+  const TEBEX_TOKEN = "14z29-f5368ec18224be261b7ef47f189a85f2cc0ffeb5";
+  const TEBEX_API = "https://headless.tebex.io/api";
+  // site item id -> Tebex package id
+  const TEBEX_IDS = {
+    "vip": 7741328, "shark": 7741342, "toxic": 7741345, "legend": 7741346,
+    "crystal": 7741349, "dragon": 7741352, "god": 7741354, "gummy": 7741356,
+    "c-gold": 7741358, "c-aqua": 7741361, "c-red": 7741362, "c-rainbow": 7741366,
+    "r-supporter": 7741369, "r-legend": 7741372, "r-mythic": 7741374,
+  };
 
-  // ---- what's for sale (keep these prices the same as in Tebex) ----
+  // ---- what's for sale (same prices as in Tebex) ----
   const TAGS = [
-    { id: "vip",     name: "VIP",     cls: "tag-vip",     price: 0.99, cash: 1000000, shards: 5000, desc: "Classic gold tag." },
-    { id: "shark",   name: "SHARK",   cls: "tag-shark",   price: 1.49, cash: 1500000, shards: 7500, desc: "For the PvP sweats." },
-    { id: "toxic",   name: "TOXIC",   cls: "tag-toxic",   price: 1.49, cash: 1500000, shards: 7500, desc: "Bright green, hard to miss." },
+    { id: "vip",     name: "VIP",     cls: "tag-vip",     price: 0.99, cash: 1000000, shards: 5000,  desc: "Classic gold tag." },
+    { id: "shark",   name: "SHARK",   cls: "tag-shark",   price: 1.49, cash: 1500000, shards: 7500,  desc: "For the PvP sweats." },
+    { id: "toxic",   name: "TOXIC",   cls: "tag-toxic",   price: 1.49, cash: 1500000, shards: 7500,  desc: "Bright green, hard to miss." },
     { id: "legend",  name: "LEGEND",  cls: "tag-legend",  price: 1.99, cash: 2000000, shards: 10000, desc: "Gold to orange fade." },
     { id: "crystal", name: "CRYSTAL", cls: "tag-crystal", price: 1.99, cash: 2000000, shards: 10000, desc: "For crystal PvP mains." },
     { id: "dragon",  name: "DRAGON",  cls: "tag-dragon",  price: 2.49, cash: 2500000, shards: 12500, desc: "Deep purple fade." },
@@ -324,9 +509,9 @@
     { id: "gummy",   name: "GUMMY",   cls: "tag-gummy",   price: 3.99, cash: 4000000, shards: 20000, desc: "The server's own colors." },
   ];
   const COLORS = [
-    { id: "c-gold",    name: "Gold name",    cls: "name-gold",    price: 0.99, cash: 1000000, shards: 5000, desc: "Your name in gold." },
-    { id: "c-aqua",    name: "Aqua name",    cls: "name-aqua",    price: 0.99, cash: 1000000, shards: 5000, desc: "Your name in aqua." },
-    { id: "c-red",     name: "Red name",     cls: "name-red",     price: 0.99, cash: 1000000, shards: 5000, desc: "Your name in red." },
+    { id: "c-gold",    name: "Gold name",    cls: "name-gold",    price: 0.99, cash: 1000000, shards: 5000,  desc: "Your name in gold." },
+    { id: "c-aqua",    name: "Aqua name",    cls: "name-aqua",    price: 0.99, cash: 1000000, shards: 5000,  desc: "Your name in aqua." },
+    { id: "c-red",     name: "Red name",     cls: "name-red",     price: 0.99, cash: 1000000, shards: 5000,  desc: "Your name in red." },
     { id: "c-rainbow", name: "Rainbow name", cls: "name-rainbow", price: 1.99, cash: 2000000, shards: 10000, desc: "Every color at once." },
   ];
   const RANKS = [
@@ -340,7 +525,6 @@
 
   const $ = (s) => document.querySelector(s);
   const money = (v) => "$" + v.toFixed(2);
-  const buyLink = (i) => i.link || STORE;
   // 1500000 -> "1.5M", 7500 -> "7.5K"
   const short = (n) => n >= 1e6 ? +(n / 1e6).toFixed(1) + "M" : n >= 1e3 ? +(n / 1e3).toFixed(1) + "K" : String(n);
   const bonusHtml = (i) => `<div class="bonus"><span class="coin">+$${short(i.cash)} money</span><span class="shard">+${short(i.shards)} shards</span></div>`;
@@ -353,6 +537,7 @@
       shards: items.reduce((s, x) => s + x.shards, 0),
     };
   }
+  let cart = [];
   let currentTag = { name: "LEGEND", cls: "tag-legend" };
   let currentName = "";
 
@@ -379,7 +564,7 @@
         <span class="price">${money(item.price)}</span>
         <div class="btns">
           <button class="btn" data-act="preview">Preview</button>
-          <a class="btn buy" href="${buyLink(item)}">Buy</a>
+          <button class="btn add" data-act="add">Add</button>
         </div>
       </div>`;
     el.querySelector('[data-act="preview"]').onclick = () => {
@@ -389,6 +574,7 @@
       updateChat();
       document.querySelector(".mc-screen").scrollIntoView({ behavior: "smooth", block: "center" });
     };
+    el.querySelector('[data-act="add"]').onclick = () => addToCart(item);
     return el;
   }
 
@@ -420,13 +606,14 @@
           <span class="price">${money(r.price)} <span class="save">Save ${Math.round((1 - r.price / sep.price) * 100)}%</span></span>
           <div class="btns">
             <button class="btn" data-act="preview">Preview</button>
-            <a class="btn buy" href="${buyLink(r)}">Buy</a>
+            <button class="btn add" data-act="add">Add</button>
           </div>
         </div>`;
       el.querySelector('[data-act="preview"]').onclick = () => {
         currentTag = { name: r.tag, cls: r.tagCls }; currentName = r.nameCls; updateChat();
         document.querySelector(".mc-screen").scrollIntoView({ behavior: "smooth", block: "center" });
       };
+      el.querySelector('[data-act="add"]').onclick = () => addToCart({ id: r.id, name: r.name + " rank", price: r.price, cash: r.cash, shards: r.shards, tag: r.tag, tagCls: r.tagCls, nameCls: r.nameCls });
       rg.appendChild(el);
     });
   }
@@ -436,13 +623,206 @@
     clearTimeout(toast.timer); toast.timer = setTimeout(() => t.classList.remove("show"), 1800);
   }
 
+  function addToCart(item) {
+    if (cart.find(c => c.id === item.id)) { toast(item.name + " is already in your cart"); return; }
+    cart.push({ ...item });
+    saveCart(); renderCart(); toast("Added " + item.name);
+  }
+
+  // keep the cart if they leave for Tebex and come back
+  function saveCart() {
+    try { localStorage.setItem("gz-cart", JSON.stringify(cart.map(c => c.id))); } catch (e) {}
+  }
+  function loadCart() {
+    let ids = [];
+    try { ids = JSON.parse(localStorage.getItem("gz-cart") || "[]"); } catch (e) {}
+    const all = [...TAGS, ...COLORS];
+    cart = [];
+    ids.forEach(id => {
+      const t = all.find(x => x.id === id);
+      const r = RANKS.find(x => x.id === id);
+      if (t) cart.push({ ...t });
+      else if (r) cart.push({ id: r.id, name: r.name + " rank", price: r.price, cash: r.cash, shards: r.shards, tag: r.tag, tagCls: r.tagCls, nameCls: r.nameCls });
+    });
+  }
+
+  function renderCart() {
+    const body = $("#cartBody"); body.innerHTML = "";
+    if (!cart.length) body.innerHTML = '<div class="empty">Your cart is empty. Add a tag or name color to see it here.</div>';
+    cart.forEach((c, i) => {
+      const row = document.createElement("div");
+      row.className = "cart-row";
+      row.innerHTML = `<span>${c.name}<small class="cart-bonus">+$${short(c.cash)} and ${short(c.shards)} shards</small></span><strong>${money(c.price)}</strong><button class="x" aria-label="Remove ${c.name}">×</button>`;
+      row.querySelector("button").onclick = () => { cart.splice(i, 1); saveCart(); renderCart(); };
+      body.appendChild(row);
+    });
+    const count = $("#cartCount");
+    count.hidden = cart.length === 0; count.textContent = cart.length;
+    $("#cartTotal").textContent = money(cartTotal());
+    $("#checkoutBtn").disabled = cart.length === 0;
+  }
+
+  function cartTotal() { return cart.reduce((s, c) => s + c.price, 0); }
+
+  // ---- real checkout: build a Tebex basket with everything in the cart, then send them to pay ----
+  let platform = "java";
+  let basket = null;
+
+  function summaryHtml() {
+    return cart.map(c => `<div class="row"><span>${c.name}</span><span>${money(c.price)}</span></div>`).join("")
+      + `<div class="row total"><span>Total</span><span>${money(cartTotal())}</span></div>`
+      + `<div class="row you-get"><span>You also get</span><span>$${short(cartCash())} money and ${short(cartShards())} shards</span></div>`;
+  }
+  function cartCash() { return cart.reduce((s, c) => s + (c.cash || 0), 0); }
+  function cartShards() { return cart.reduce((s, c) => s + (c.shards || 0), 0); }
+
+  function showStep(id) {
+    ["step1", "stepWait", "step2", "step3"].forEach(s => $("#" + s).hidden = s !== id);
+    const n = id === "step1" ? 1 : id === "step2" ? 2 : 3;
+    document.querySelectorAll("#steps li").forEach(li => li.classList.toggle("on", Number(li.dataset.step) <= n));
+    $("#steps").hidden = id === "step3";
+    $("#closeCheckout").hidden = id === "stepWait";
+  }
+
+  function setPlatform(p) {
+    platform = p;
+    document.querySelectorAll("#platform button").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.p === p)));
+    $("#coNameLabel").textContent = p === "java" ? "Minecraft name" : "Xbox gamertag";
+    $("#coHint").textContent = p === "java"
+      ? "Your exact Java username. Your items go to this player."
+      : "The gamertag you use on Bedrock, exactly as it's spelled. We add the dot for you.";
+    validStep1();
+  }
+  document.querySelectorAll("#platform button").forEach(b => b.onclick = () => setPlatform(b.dataset.p));
+
+  // the name Tebex expects: Java as typed; Bedrock = "." + gamertag with spaces
+  function tebexName() {
+    const raw = $("#coName").value.trim();
+    if (platform === "java") return raw;
+    return "." + raw.replace(/^\.+/, "").replace(/_/g, " ").replace(/\s+/g, " ");
+  }
+
+  function validStep1() {
+    const raw = $("#coName").value.trim();
+    const nameOk = platform === "java" ? /^[A-Za-z0-9_]{3,16}$/.test(raw) : /^\.?[A-Za-z0-9 _]{1,16}$/.test(raw);
+    $("#toCheck").disabled = !(nameOk && $("#coAge").checked && $("#coTerms").checked);
+  }
+
+  function showError(el, msg) { const e = $(el); e.textContent = msg; e.hidden = !msg; }
+
+  async function api(path, body) {
+    const r = await fetch(TEBEX_API + path, {
+      method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body),
+    });
+    let j = {};
+    try { j = await r.json(); } catch (e) {}
+    if (!r.ok) { const err = new Error(j.title || j.detail || ("Error " + r.status)); err.status = r.status; throw err; }
+    return j.data;
+  }
+
+  function openCheckout() {
+    if (!cart.length) return;
+    setCart(false);
+    if (!$("#coName").value) $("#coName").value = $("#mcName").value.trim() === "Steve" ? "" : $("#mcName").value.trim();
+    $("#coSummary").innerHTML = summaryHtml();
+    showError("#coError", "");
+    validStep1();
+    showStep("step1");
+    $("#checkoutLayer").hidden = false;
+    $("#coName").focus();
+  }
+
+  function closeCheckout() {
+    if (!$("#stepWait").hidden) return;
+    $("#checkoutLayer").hidden = true;
+  }
+
+  $("#checkoutBtn").onclick = openCheckout;
+  $("#closeCheckout").onclick = closeCheckout;
+  $("#coName").addEventListener("input", validStep1);
+  ["coAge", "coTerms"].forEach(id => $("#" + id).addEventListener("change", validStep1));
+
+  // step 1 -> check the name with Tebex (it rejects names that don't exist)
+  $("#toCheck").onclick = async () => {
+    showError("#coError", "");
+    $("#waitText").textContent = "Checking your name…";
+    showStep("stepWait");
+    const here = location.origin + location.pathname;
+    try {
+      basket = await api("/accounts/" + TEBEX_TOKEN + "/baskets", {
+        complete_url: here + "?thanks=1", cancel_url: here, complete_auto_redirect: true, username: tebexName(),
+      });
+    } catch (e) {
+      showStep("step1");
+      if (/invalid username/i.test(e.message)) {
+        showError("#coError", platform === "java"
+          ? "We couldn't find a Java account with that name. Check the spelling. Playing on Bedrock? Pick Bedrock above."
+          : "We couldn't find that Xbox gamertag. Check the spelling, including spaces.");
+      } else {
+        showError("#coError", "The store couldn't be reached right now. Try again in a minute.");
+      }
+      return;
+    }
+    const name = basket.username || tebexName();
+    const bedrock = name.startsWith(".");
+    const inGame = bedrock ? name.replace(/ /g, "_") : name;
+    $("#whoName").textContent = inGame;
+    $("#whoNote").textContent = bedrock ? "Bedrock player. This is how your name shows up in game." : "Java player";
+    $("#whoHead").src = "https://mc-heads.net/avatar/" + encodeURIComponent(bedrock ? "MHF_Steve" : name) + "/64";
+    $("#coSummary2").innerHTML = summaryHtml();
+    showError("#payError", "");
+    showStep("step2");
+    $("#payBtn").focus();
+  };
+
+  $("#backTo1").onclick = () => { showStep("step1"); $("#coName").focus(); $("#coName").select(); };
+
+  // step 2 -> put every cart item in the Tebex basket, then go pay
+  $("#payBtn").onclick = async () => {
+    if (!basket) return;
+    $("#waitText").textContent = "Adding your items…";
+    showStep("stepWait");
+    let latest = basket;
+    try {
+      for (const c of cart) {
+        latest = await api("/baskets/" + basket.ident + "/packages", { package_id: String(TEBEX_IDS[c.id]), quantity: 1 });
+      }
+    } catch (e) {
+      showStep("step2");
+      showError("#payError", "Something went wrong adding your items. Try again in a minute.");
+      return;
+    }
+    $("#waitText").textContent = "Opening secure checkout…";
+    const link = (latest.links && latest.links.checkout) || ("https://pay.tebex.io/" + basket.ident);
+    location.href = link;
+  };
+
+  $("#doneBtn").onclick = () => { $("#checkoutLayer").hidden = true; };
+
+  // back from Tebex after paying
+  if (new URLSearchParams(location.search).has("thanks")) {
+    cart = []; saveCart();
+    history.replaceState(null, "", location.pathname);
+    showStep("step3");
+    $("#checkoutLayer").hidden = false;
+  }
+
+  function setCart(open) { document.getElementById("cartLayer").classList.toggle("open", open); }
+  $("#openCart").onclick = () => setCart(true);
+  $("#closeCart").onclick = () => setCart(false);
+  $("#scrim").onclick = () => setCart(false);
+  document.addEventListener("keydown", e => {
+    if (e.key !== "Escape") return;
+    if (!$("#checkoutLayer").hidden) closeCheckout(); else setCart(false);
+  });
+
   $("#copyIp").onclick = async () => {
     try { await navigator.clipboard.writeText("gummeez.minecraft.how"); toast("Server address copied"); }
     catch { toast("gummeez.minecraft.how"); }
   };
   $("#mcName").addEventListener("input", () => { render(); updateChat(); });
 
-  render(); updateChat();
+  loadCart(); render(); renderCart(); updateChat();
 </script>
 </body>
 </html>
