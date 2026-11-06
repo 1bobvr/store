@@ -135,7 +135,17 @@
   .tag-shark   { color: #55A6FF; }
   .tag-toxic   { color: #7CFF3B; }
   .tag-gummy   { background: linear-gradient(90deg, #FF6FD8, #38E8FF, #FFD84D); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  .tag-legend, .tag-god, .tag-dragon, .tag-crystal, .tag-gummy, .name-rainbow { text-shadow: none; }
+  .tag-harvest { background: linear-gradient(90deg, #FFB347, #FF6B1A, #C2410C); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .tag-legend, .tag-god, .tag-dragon, .tag-crystal, .tag-gummy, .tag-harvest, .name-rainbow { text-shadow: none; }
+  .rank.pass-card { display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; align-items: start; border-color: #FF8A00;
+    background: linear-gradient(160deg, #5a2a0c, #2b1a10 60%); }
+  .pass-card .lvl { color: #FFB347; font-weight: 700; }
+  .pass-tiers { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-top: 10px; }
+  .pass-tiers span { border-radius: 6px; padding: 6px 0; text-align: center; font-size: 13px; font-weight: 700; color: #2b1a10;
+    background: linear-gradient(160deg, #FFC300, #FF7A00); }
+  .pass-tiers span:nth-child(3n) { background: linear-gradient(160deg, #FF7A00, #D7261E); color: #fff; }
+  .pass-tiers span:nth-child(5n) { background: linear-gradient(160deg, #A3B11C, #6b8e23); color: #fff; }
+  @media (max-width: 700px) { .rank.pass-card { grid-template-columns: 1fr; } }
   .name-gold   { color: #FFD84D; }
   .name-aqua   { color: #55FFFF; }
   .name-red    { color: #FF5555; }
@@ -334,6 +344,7 @@
       <a href="#tags">Chat tags</a>
       <a href="#colors">Name colors</a>
       <a href="#ranks">Ranks</a>
+      <a href="#pass">Season Pass</a>
     </nav>
     <div class="bar-right">
       <button class="ip" id="copyIp" title="Copy server address"><span class="label">Play:</span> gummeez.minecraft.how</button>
@@ -386,6 +397,14 @@
       <p>A tag and a name color together for less than buying them on their own, with way more money and shards.</p>
     </div>
     <div class="ranks" id="rankGrid"></div>
+  </section>
+
+  <section id="pass">
+    <div class="section-head">
+      <h2>Harvest Season Pass</h2>
+      <p>Unlock the premium track of this month's Season Pass. Earn tiers by playing, then claim a second, better reward on every tier with /pass.</p>
+    </div>
+    <div class="ranks" id="passGrid" style="grid-template-columns: 1fr"></div>
   </section>
 
   <section>
@@ -495,6 +514,7 @@
     "crystal": 7741349, "dragon": 7741352, "god": 7741354, "gummy": 7741356,
     "c-gold": 7741358, "c-aqua": 7741361, "c-red": 7741362, "c-rainbow": 7741366,
     "r-supporter": 7741369, "r-legend": 7741372, "r-mythic": 7741374,
+    "pass": 7794492,
   };
 
   // ---- what's for sale (same prices as in Tebex) ----
@@ -522,6 +542,11 @@
     { id: "r-mythic", name: "Mythic", tag: "GUMMY", tagCls: "tag-gummy", nameCls: "name-rainbow", price: 3.49, cash: 15000000, shards: 75000, parts: ["gummy", "c-rainbow"],
       perks: ["GUMMY tag", "Rainbow name", "$15M money", "75K shards", "Particle trail", "Lightning kill effect"] },
   ];
+
+  const PASS = { id: "pass", name: "Harvest Season Pass", price: 4.99, cash: 0, shards: 0,
+    perks: ["A better reward on all 50 tiers", "Way more money and shards every tier", "A crate key on every tier, including Legendary",
+            "Harvest Baskets, god apples, totems, netherite, an elytra and a beacon", "25% more Season Pass XP on everything",
+            "Tier 50: the exclusive HARVEST '26 tag"] };
 
   const $ = (s) => document.querySelector(s);
   const money = (v) => "$" + v.toFixed(2);
@@ -616,6 +641,29 @@
       el.querySelector('[data-act="add"]').onclick = () => addToCart({ id: r.id, name: r.name + " rank", price: r.price, cash: r.cash, shards: r.shards, tag: r.tag, tagCls: r.tagCls, nameCls: r.nameCls });
       rg.appendChild(el);
     });
+    const pg = $("#passGrid"); pg.innerHTML = "";
+    const pe = document.createElement("div");
+    pe.className = "rank pass-card";
+    pe.innerHTML = `
+      <div>
+        <h3>${PASS.name}</h3>
+        <div class="preview"><span class="t tag-harvest">HARVEST '26</span> ${n} <span class="lvl">✦50</span><span class="sep">:</span> gg</div>
+        <ul>${PASS.perks.map(p => `<li>${p}</li>`).join("")}</ul>
+      </div>
+      <div>
+        <div class="deal">
+          <div class="row"><span>Free track</span><span>Everyone</span></div>
+          <div class="row deal-good"><span>Premium track</span><span>Unlocked instantly</span></div>
+          <div class="row"><span>Lasts</span><span>All of November</span></div>
+        </div>
+        <div class="pass-tiers">${[1,5,10,15,20,25,30,35,40,50].map(t => `<span>T${t}</span>`).join("")}</div>
+        <div class="row" style="margin-top:14px">
+          <span class="price">${money(PASS.price)}</span>
+          <div class="btns"><button class="btn add" data-act="add">Add</button></div>
+        </div>
+      </div>`;
+    pe.querySelector('[data-act="add"]').onclick = () => addToCart({ ...PASS, name: PASS.name + " (Premium)" });
+    pg.appendChild(pe);
   }
 
   function toast(msg) {
@@ -641,7 +689,8 @@
     ids.forEach(id => {
       const t = all.find(x => x.id === id);
       const r = RANKS.find(x => x.id === id);
-      if (t) cart.push({ ...t });
+      if (id === "pass") cart.push({ ...PASS, name: PASS.name + " (Premium)" });
+      else if (t) cart.push({ ...t });
       else if (r) cart.push({ id: r.id, name: r.name + " rank", price: r.price, cash: r.cash, shards: r.shards, tag: r.tag, tagCls: r.tagCls, nameCls: r.nameCls });
     });
   }
@@ -652,7 +701,7 @@
     cart.forEach((c, i) => {
       const row = document.createElement("div");
       row.className = "cart-row";
-      row.innerHTML = `<span>${c.name}<small class="cart-bonus">+$${short(c.cash)} and ${short(c.shards)} shards</small></span><strong>${money(c.price)}</strong><button class="x" aria-label="Remove ${c.name}">×</button>`;
+      row.innerHTML = `<span>${c.name}<small class="cart-bonus">${c.id === "pass" ? "Premium rewards on all 50 tiers" : `+$${short(c.cash)} and ${short(c.shards)} shards`}</small></span><strong>${money(c.price)}</strong><button class="x" aria-label="Remove ${c.name}">×</button>`;
       row.querySelector("button").onclick = () => { cart.splice(i, 1); saveCart(); renderCart(); };
       body.appendChild(row);
     });
