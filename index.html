@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Gummeez SMP Store</title>
-<meta name="description" content="Official store for Gummeez SMP. Ranks, chat tags, name colors, the Season Pass and donations.">
+<meta name="description" content="Official store for Gummeez SMP. Ranks, chat tags, name colors, the Season Pass and support packs.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700;9..40,800&family=VT323&display=swap" rel="stylesheet">
@@ -531,7 +531,7 @@ footer{margin-top:56px;background:var(--ink);color:#a7aab8;font-size:14px}
       <details><summary>How do I switch my tag or name color?</summary><p>Type /tags in game. You can switch between anything you own at any time.</p></details>
       <details><summary>Is anything a subscription?</summary><p>No. Every item is a one-time payment and you keep it forever.</p></details>
       <details><summary>I typed the wrong name. What now?</summary><p>Open a ticket in our Discord with your receipt and we'll move it to the right name.</p></details>
-      <details><summary>What do donations do?</summary><p>They pay for the server. Donations don't give items, but you'll get a thank-you in chat.</p></details>
+      <details><summary>What are support packs?</summary><p>Crate keys and shards that also help pay for the server. You get a thank-you in chat too.</p></details>
     </div>
   </section>
   <section class="dc">
@@ -631,7 +631,7 @@ const API = "https://headless.tebex.io/api/accounts/";
 const SLIDES = [
   {kicker:"Ranks", title:"Stand out in chat", text:"A tag, name colors, join effects and millions in in-game money. Ranks start at $1.49.", button:"Shop ranks", go:"ranks", second:"See tags", go2:"tags", image:IMG["spawn-letters"], scene:"sunset", icon:["crown",["#ffd43b","#ff8c1a"]]},
   {kicker:"Ends Nov 30", title:"Harvest Season Pass", text:"A better reward on all 50 tiers, 25% more XP and an exclusive HARVEST 26 tag.", button:"Get the pass", go:"pass", image:IMG["dome"], scene:"autumn", icon:["pumpkin",[]]},
-  {kicker:"Support us", title:"Keep the server online", text:"Every donation goes to running Gummeez SMP. Thank you for helping!", button:"Donate", go:"donate", image:IMG["spawn-aerial"], scene:"ocean", icon:["heart",[]]}
+  {kicker:"Support us", title:"Keep the server online", text:"Support packs give you crate keys and shards, and help pay for Gummeez SMP.", button:"See support packs", go:"donate", image:IMG["spawn-aerial"], scene:"ocean", icon:["heart",[]]}
 ];
 
 /* Products. When the Tebex token is set, prices, pictures and package IDs
@@ -661,8 +661,12 @@ const CATEGORIES = [
   {id:"pass", title:"Season Pass", icon:["pumpkin",[]], scene:"autumn", sub:"Premium rewards for the current season.", items:[
     {name:"Harvest Season Pass", price:4.99, icon:["pumpkin",[]], tag:"[HARVEST 26]", tc:["#ffa94d","#e8590c"], flag:"Ends Nov 30", hot:true, perks:["Premium track for this season","A better reward on all 50 tiers","25% more Season Pass XP","Exclusive HARVEST 26 tag at tier 50"]}
   ]},
-  {id:"donate", title:"Donate", icon:["heart",[]], scene:"ocean", sub:"Donations pay for the server. They don't give items, but you'll get a thank-you in chat.", items:
-    [1,5,10,25].map(a=>({name:"Donate $"+a, price:a, big:"$"+a, qty:true, perks:["Helps keep the server online","Thank-you message in chat"]}))}
+  {id:"donate", title:"Support Packs", icon:["heart",[]], scene:"ocean", sub:"Crate keys and shards that help keep the server online. You'll get a thank-you in chat too.", items:[
+    {name:"Small Support Pack", price:1,  big:"$1",  qty:true, perks:["1 Common crate key","1,000 shards","Thank-you message in chat"]},
+    {name:"Support Pack",       price:5,  big:"$5",  qty:true, perks:["2 Rare crate keys","5,000 shards","Thank-you message in chat"]},
+    {name:"Big Support Pack",   price:10, big:"$10", qty:true, perks:["1 Legendary crate key","2 Rare crate keys","12,000 shards","Thank-you message in chat"]},
+    {name:"Mega Support Pack",  price:25, big:"$25", qty:true, perks:["3 Legendary crate keys","3 Rare crate keys","30,000 shards","Thank-you message in chat"]}
+  ]}
 ];
 
 /* ---------- helpers ---------- */
@@ -1009,7 +1013,7 @@ function openItem(name){
   $("mTitle").textContent=it.name;
   $("mPrice").textContent=usd(it.price);
   $("mList").innerHTML=it.perks.map(p=>`<li>${esc(p)}</li>`).join("");
-  $("mNote").textContent=it.qty?"Donations don't give items, ranks or money.":"Permanent, one-time purchase. Works on Java and Bedrock. Switch any time with /tags.";
+  $("mNote").textContent=it.qty?"Keys and shards are delivered next time you're online. You can buy more than one.":"Permanent, one-time purchase. Works on Java and Bedrock. Switch any time with /tags.";
   const inCart=!it.qty&&cart.some(x=>x.name===it.name);
   $("mAdd").textContent=inCart?"In cart ✓":"Add to cart";
   $("modal").classList.add("on");setTimeout(()=>$("mClose").focus(),30);
@@ -1219,7 +1223,7 @@ function drawArt(){
     ["shard-shop","Shard shop","Spend the shards you earn on special items.",true]
   ];
   $("tiles").innerHTML=T.map(([k,t,d,big])=>`<div class="tile ${big?"big":""}" style="background-image:url(${IMG[k]})"><div><b>${t}</b><span>${d}</span></div></div>`).join("");
-  const H=[["Pick your items","Add anything to your cart. You can mix ranks, tags, colors and donations.","shop"],
+  const H=[["Pick your items","Add anything to your cart. You can mix ranks, tags, colors and support packs.","shop"],
            ["Enter your name","Type your Minecraft name, or a friend's if it's a gift. Then pay on Tebex.","dome"],
            ["Get it in game","Your items show up the next time you're online. Switch looks with /tags.","spawn-street"]];
   $("hsteps").innerHTML=H.map(([t,d,img])=>`<div class="hstep"><div class="art" style="background-image:url(${IMG[img]})"></div><div class="txt"><b>${t}</b><span>${d}</span></div></div>`).join("");
